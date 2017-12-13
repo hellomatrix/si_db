@@ -1,7 +1,7 @@
 import light_distribution as ld
 import curve_fitting as cf
 import numpy as np
-
+import exposure_cal as ec
 
 def getTestImgs():
 
@@ -25,8 +25,6 @@ def getTestImgs():
 
     return testImgs
 
-
-
 if __name__=='__main__':
 
     # imgs = getTestImgs()
@@ -44,9 +42,12 @@ if __name__=='__main__':
     #
     # ld.getAreaIntensity([avg_img])
 
-    path = '../data/DingBiao/data_20171205/Calibration/800nm/300ms/'
-    avgImg = ld.getAvgImg(path)
-    allimgs= np.uint8(np.average(ld.getAllImgs(path),0))
+    # path = '../data/DingBiao/data_20171205/Calibration/800nm/300ms/'
+    # avgImg = ld.getAvgImg(path)
+    # allimgs= np.uint8(np.average(ld.getAllImgs(path),0))
+    # print(avgImg['avgImage']-allimgs)
 
-    print(avgImg['avgImage']-allimgs)
-
+    path='../data/DingBiao/data_20171205/200ms_DATA/'
+    imgs = ld.getAllImgs(path)
+    ld.getAreaIntensity(imgs)
+    print('test')
