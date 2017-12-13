@@ -9,7 +9,6 @@ import copy
 
 COLOR_1 = (255, 0, 0)
 
-
 def getAvgImg(path):
 
     files = os.listdir(path)
@@ -22,7 +21,6 @@ def getAvgImg(path):
     avg_img = np.array(np.average(imgs, 0), dtype=np.uint8)
 
     return {'avgImage':[avg_img]}
-
 
 def getImgList(path=None,interv=None):
 
@@ -44,9 +42,6 @@ def getImgList(path=None,interv=None):
 
 
 def getAreaIntensity(images=None,path=None,name=None,mask=None):
-
-    COLOR_1 = (255,0,0)
-    COLOR_2 = (0,0,255)
 
     path = '../data/DingBiao/data_20171205/'
     name='coords_calibration.mat'
@@ -156,7 +151,7 @@ def getAvgGRBG(img,area):
     # title = 'Intensity '
     # showImg(show_img,title)
     #
-    # cf.fit_3d(cf.img2tuple(intensity[:,:,0]), 'band G1')
+    cf.fit_3d(cf.img2Tuple(intensity[:,:,0]), 'band G1')
 
     return intensity
 
@@ -205,6 +200,12 @@ def getAllImgs(path=None): # get all files in folder and children folder
 
     imgs = []
     files =os.listdir(path)
+    f_test = os.path.join(path, files[0])
+    if os.path.isdir(f_test):
+        files.sort(key=lambda x: int(x[:-11]))
+    else:
+        files.sort(key=lambda x: int(x[:-4]))
+
     for f in files:
         f_path=os.path.join(path,f)
 
@@ -220,9 +221,6 @@ def getAllImgs(path=None): # get all files in folder and children folder
 def getT_new():
 
     imgs = getAllImgs()
-
-
-
 
 
 def getT(start,end,zero,path):
@@ -284,7 +282,7 @@ def getFilterMask(img):
 
     return mask_final
 
-def plotLine(img,title=''):
+def plotLines(img,title=''):
 
     img=np.array(img)
 
@@ -313,10 +311,10 @@ def plotLine(img,title=''):
 if __name__=='__main__':
 
     # The 2nd data with qd
-    # path = '../data/DingBiao/data_20171205/Calibration/800nm/300ms/'
+    # path = '../data/DingBiao/data_20171205/Calibration/400nm/200ms/'
     # avgImg = getAvgImg(path)
     # avg_cols, avg_rows = getAreaIntensity(avgImg['avgImage'])
-    # plotLine(avg_cols)
+    # plotLines(avg_cols)
     # plotLine(avg_rows)
 
     # # test the image by sampling
@@ -333,13 +331,11 @@ if __name__=='__main__':
     # # path = '../data/DingBiao/100DS_first_dingbiao/WithoutQD/742-900/'
     # imgs = getImgList(path,10)
     # getAreaIntensity(imgs['images'])
-
-    # The 1nd data with qd
-    path = '../data/DingBiao/100DS_first_dingbiao/WithQD/390-500/'
-    imgs = getImgList(path,10)
-    getAreaIntensity(imgs['images'])
-
-
+    #
+    # # The 1nd data with qd
+    # path = '../data/DingBiao/100DS_first_dingbiao/WithQD/390-500/'
+    # imgs = getImgList(path,10)
+    # getAreaIntensity(imgs['images'])
 
     ####----------------------------------------------transmission matrix-----------------------------
 
