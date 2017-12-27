@@ -6,103 +6,98 @@ import cv2
 import scipy.io as sio
 import curve_fitting as cf
 import copy
+from matplotlib.backends.backend_pdf import PdfPages
+import xlrd
 
 COLOR_1 = (255, 0, 0)
 
-def getAvgImg(path):
+
+
+
+def getImgsOneFolder(path,a=0,b=-4):
 
     files = os.listdir(path)
+    files.sort(key = lambda x:int(x[a:b]))
+
+    print(path)
 
     imgs=[]
     for fileName in files:
-        temp = cv2.imread(path+fileName,cv2.IMREAD_GRAYSCALE)
-        imgs.append(temp)
+        f = cv2.imread(path+fileName,cv2.IMREAD_GRAYSCALE)
+        imgs.append(f)
 
-    avg_img = np.array(np.average(imgs, 0), dtype=np.uint8)
+        print(fileName)
 
-    return {'avgImage':[avg_img]}
+    return imgs
 
-def getImgList(path=None,interv=None):
+
+def getImgsOneFolderSplit(path):
 
     files = os.listdir(path)
-    files.sort(key = lambda x:int(x[:-4]))
+    files.sort(key = lambda x:(int(x.split('_')[0]),int(x.split('_')[-1].split('.')[0])))
+
+    print(path)
 
     imgs=[]
-    fileNames=[]
-    for i in range(0,len(files),interv):
+    f_names=[]
+    for fileName in files:
+        f = cv2.imread(path+fileName,cv2.IMREAD_GRAYSCALE)
 
-        f = files[i]
-        fileNames.append(f)
-        print(f)
+        imgs.append(f)
+        f_names.append(fileName)
 
-        temp = cv2.imread(path+f,cv2.IMREAD_GRAYSCALE)
-        imgs.append(temp)
+        print(fileName)
 
-    return {'imgNames':fileNames,'images':imgs}
+    return f_names,imgs
 
 
-def getAreaIntensity(images=None,path=None,name=None,mask=None):
+def getAvgImg(imgs):
 
-    path = '../data/DingBiao/data_20171205/'
-    name='coords_calibration.mat'
+     print(len(imgs))
+     return np.average(imgs,0)
+
+
+def showImgArea(img,area):
+
+    show_img = copy.deepcopy(img)
+    for i in range(area.shape[0]):
+        for j in range(area.shape[1]):
+            cv2.rectangle(show_img, (area[i,j,0], area[i,j,1]), (area[i,j,2], area[i,j,3]),COLOR_1,2)
+            print(area[i, j, 0], area[i, j, 1],area[i, j, 2], area[i, j, 3])
+
+
+    plt.figure()
+    plt.imshow(show_img,cmap=plt.cm.get_cmap('gray'))
+    plt.title('')
+    plt.show()
+
+def getArea(path,name):
+
     mat = sio.loadmat(path+name)
-
-    for image in images:
-
-        array_img = np.array(image)
-        show_img1 = copy.deepcopy(array_img)
-        show_img2 = copy.deepcopy(array_img)
-
-        # col
-        cols = mat['col']
-        avg_cols= []
-        for i in range(cols.shape[0]):
-            for j in range(cols.shape[1]):
-                cv2.rectangle(show_img1, (cols[i,j,0], cols[i,j,1]), (cols[i,j,2], cols[i,j,3]),COLOR_1,2)
-                # print(cols[i, j, 0], cols[i, j, 1],cols[i, j, 2], cols[i, j, 3])
-                temp = np.average(np.average(array_img[cols[i,j,1]:cols[i,j,3],cols[i,j,0]:cols[i,j,2]],0),0)
-                avg_cols.append([i,j,temp])
-                # print(avg_cols)
-
-        title='Light distrib follow cols'
-        cf.fit_3d(np.array(avg_cols),title)
-
-        plt.figure()
-        plt.imshow(show_img1)
-        plt.title(title)
-        plt.show()
-
-        # row
-        rows = mat['row']
-        avg_rows = []
-        for i in range(rows.shape[0]):
-            for j in range(rows.shape[1]):
-                cv2.rectangle(show_img2, (rows[i,j,0], rows[i,j,1]), (rows[i,j,2], rows[i,j,3]),COLOR_1,2)
-                avg_rows.append([i,j,np.average(np.average(array_img[rows[i,j,1]:rows[i,j,3],rows[i,j,0]:rows[i,j,2]],0),0)])
-                # print(avg_rows)
-
-        title='Light distrib follow rows'
-        cf.fit_3d(np.array(avg_rows),title)
-
-        plt.figure()
-        plt.imshow(show_img2)
-        plt.title(title)
-        plt.show()
-
-    return avg_cols,avg_rows
-
-
-def getArea():
-
-    path = '../data/DingBiao/data_20171205/'
-    name='coords_calibration.mat'
-    mat = sio.loadmat(path+name)
-
     cols = mat['col']
     rows = mat['row']
     qd_square = mat['QD']
 
     return cols,rows,qd_square
+
+
+def getMixGRBG(col,row,show=0):
+
+    uper = min(col.shape[0],col.shape[1])
+
+    mixGRBG = np.zeros((uper,uper,4))
+
+    for i in range(uper):
+        for j in range(uper):
+            mixGRBG[i,j,:] = np.average((col[i,j,:],col[i,j+1,:],row[i,j,:],row[i+1,j,:]),0)
+
+    if show == 1:
+        cf.fit_3d(cf.img2Tuple(mixGRBG[:,:,0]), 'getMixGRBG:band G1')
+        cf.fit_3d(cf.img2Tuple(mixGRBG[:,:,1]), 'getMixGRBG:band R')
+        cf.fit_3d(cf.img2Tuple(mixGRBG[:,:,2]), 'getMixGRBG:band B')
+        cf.fit_3d(cf.img2Tuple(mixGRBG[:,:,3]), 'getMixGRBG:band G2')
+
+    return mixGRBG
 
 
 def getMonochromatorValue(start,end,path=None,name=None):
@@ -117,14 +112,37 @@ def getMonochromatorValue(start,end,path=None,name=None):
     return monochromator
 
 
-def getAvgGRBG(img,area):
+def getTheBiggestBand(G1RBG2):
 
-    mask = getFilterMask(img)
+    top = np.max(G1RBG2)
+    band=G1RBG2.index(top)
+    if band == 3:
+        band=0
+
+    return band,top
+
+
+# def checkBand(GRBG):
+#
+#     if (np.sum(GRBG - GRBG[0]) == 0):
+#         # print('This band is good!')
+#         k = cf.fit_3d(cf.img2Tuple(intensities[:, :, bands[0]]),title=str(bands[0]))
+#
+#     else:
+#         print('This band is bad! band:',str(lamb))
+#
+#     return k
+
+
+def getAvgGRBG(img,area,mask,show=0):
+
     square = area
-    show_img = copy.deepcopy(img)
+    show_img = img.astype(np.uint8).copy()
 
     intensity = np.zeros((square.shape[0],square.shape[1],4),dtype=float)
 
+    bands=[]
+    vals=[]
     for i in range(square.shape[0]):
         for j in range(square.shape[1]):
 
@@ -145,56 +163,32 @@ def getAvgGRBG(img,area):
             B=np.average(temp[mask_temp == 'B'])
             G2=np.average(temp[mask_temp == 'G2'])
 
-            intensity[i,j,:]=[G1,R,B,G2]
+            G1RBG2 = [G1,R,B,G2]
+            intensity[i,j,:] = G1RBG2
+            band,val = getTheBiggestBand(G1RBG2)
+            bands.append(band)
+            vals.append(val)
+
     # print('[G1,R,B,G2]',intensity[i,j,:])
 
-    # title = 'Intensity '
-    # showImg(show_img,title)
-    #
-    cf.fit_3d(cf.img2Tuple(intensity[:,:,0]), 'band G1')
+    if show==1:
+        showGrayImg(show_img,'')
 
-    return intensity
+        cf.fit_3d(cf.img2Tuple(intensity[:,:,0]), 'getAvgGRBG:band G1')
+        cf.fit_3d(cf.img2Tuple(intensity[:,:,1]), 'getAvgGRBG:band R')
+        cf.fit_3d(cf.img2Tuple(intensity[:,:,2]), 'getAvgGRBG:band B')
+        cf.fit_3d(cf.img2Tuple(intensity[:,:,3]), 'getAvgGRBG:band G2')
+
+    return intensity,bands,vals
 
 
-def showImg(img,title=''):
+def showGrayImg(img,title=''):
 
+    show_img = copy.deepcopy(img)
     plt.figure()
-    plt.imshow(img,cmap=plt.cm.get_cmap('gray'))
+    plt.imshow(show_img,cmap=plt.cm.get_cmap('gray'))
     plt.title(title)
     plt.show()
-
-## get the transmission matrix
-def getReflect(img,monochromator):
-
-    cols,rows,qd_square = getArea()
-
-    qd_intensity = getAvgGRBG(img,qd_square)
-    cols_intensity = getAvgGRBG(img,cols)
-    rows_intensity = getAvgGRBG(img,rows)
-
-    without_qd_intensity = np.zeros((qd_intensity.shape[0],qd_intensity.shape[1],4),dtype=float)
-    for i in range(qd_intensity.shape[0]):
-        for j in range(qd_intensity.shape[1]):
-            without_qd_intensity[i,j,:] = np.average((cols_intensity[i,j,:],cols_intensity[i,j+1,:],
-                                   rows_intensity[i,j,:],rows_intensity[i+1,j,:]),0)
-
-    C = cf.fit_3d(cf.img2Tuple(without_qd_intensity[:,:,0]), 'without_qd_intensity')
-
-    paras = np.zeros((qd_intensity.shape[0],qd_intensity.shape[1]),dtype=float)
-    for i in range(qd_intensity.shape[0]):
-        for j in range(qd_intensity.shape[1]):
-
-             Z = C[0] * i + C[1] * j + C[2]
-             paras[i,j]=Z/C[2]
-
-    cf.fit_3d(cf.img2Tuple(paras),'Paras test')
-
-    Reflect = np.zeros((qd_intensity.shape[0],qd_intensity.shape[1],4),dtype=float)
-    for i in range(qd_intensity.shape[0]):
-        for j in range(qd_intensity.shape[1]):
-            Reflect[i,j,:]=qd_intensity[i,j,:]/(monochromator*paras[i,j])
-
-    return Reflect
 
 def getAllImgs(path=None): # get all files in folder and children folder
 
@@ -218,58 +212,84 @@ def getAllImgs(path=None): # get all files in folder and children folder
 
     return imgs
 
-def getT_new():
+#
+# def getK(intensities,bands,lamb=None):
+#
+#     if(np.sum(bands-bands[0])==0):
+#         # print('This band is good!')
+#         k = cf.fit_3d(cf.img2Tuple(intensities[:, :, bands[0]]),title=str(bands[0]))
+#
+#     else:
+#         print('This band is bad! band:',str(lamb))
+#
+#     return k
 
-    imgs = getAllImgs()
+def getK(lightZone,band):
 
+    k = cf.fit_3d(cf.img2Tuple(lightZone[:, :, band]),title=str(band))
 
-def getT(start,end,zero,path):
-
-    files = os.listdir(path)
-    files.sort(key=lambda x: int(x[:-4]))
-
-    mono_values = getMonochromatorValue(start,end)
-
-    reflect_list = []
-    for i in range(start-zero,end-zero+1):
-        f = files[i]
-        temp = cv2.imread(path+f,cv2.IMREAD_GRAYSCALE)
-        print(f,mono_values[i])
-
-        reflect_list.append(getReflect(temp,mono_values[i,1]))
-
-    return reflect_list
+    return k
 
 
-def getALLT():
+def getOneBandT(exp_time,fore_ground,K,back_ground=None):
 
-    data1 = getT(390,450,390,path='../data/DingBiao/data_20171205/200ms_DATA/390-450-200ms/')
-    data2 = getT(451,500,451,path='../data/DingBiao/data_20171205/200ms_DATA/451-500-200ms/')
-    data3 = getT(501,550,501,path='../data/DingBiao/data_20171205/200ms_DATA/501-550-200ms/')
-    data4 = getT(551,600,551,path='../data/DingBiao/data_20171205/200ms_DATA/551-600-200ms/')
-    data5 = getT(601,700,601,path='../data/DingBiao/data_20171205/200ms_DATA/601-700-200ms/')
-    data6 = getT(701,800,701,path='../data/DingBiao/data_20171205/200ms_DATA/701-800-200ms/')
-    data7 = getT(801,900,801,path='../data/DingBiao/data_20171205/200ms_DATA/801-900-200ms/')
-    data8 = getT(901,1000,901,path='../data/DingBiao/data_20171205/200ms_DATA/901-1000-200ms/')
+    T = np.zeros((fore_ground.shape[0],fore_ground.shape[1],4),dtype=float)
+    for i in range(fore_ground.shape[0]):
+        for j in range(fore_ground.shape[1]):
 
-    all=np.array((data1+data2+data3+data4+data5+data6+data7+data8))
+            # Z = K[0] * i + K[1] * j + K[2]
+            # kk = Z / K[2]
 
-    sio.savemat('all.mat', {'all': all})
 
-    allT = []
-    for k in range(4):
-        for i in range(10):
-            for j in range(10):
-                allT.append(all[:,i,j,k])
+            # best-fit quadratic curve
+            Z=K
+            kk = Z[i,j]/Z[0, 0]
 
-    sio.savemat('allT.mat', {'allT': allT})
+            T[i, j, :] = fore_ground[i, j, :] / (back_ground * kk*exp_time)
 
+    return T
+
+
+def getT(monos,exp_time,test_no,pp,imgs,cols, rows, qd_square,mask,K=None):
+
+
+    #mono_values = getMonochromatorValue(390, 1000)
+    mono_values = np.array(monos).T
+
+
+    T_all = []
+    for i,im in zip(range(len(imgs)),imgs):
+
+        avg_cols = getAvgGRBG(im, cols, mask)
+        avg_rows = getAvgGRBG(im, rows, mask)
+        mix_val = getMixGRBG(col=avg_cols[0], row=avg_rows[0],show=1)
+
+        band= avg_rows[1][0]
+        K = getK(mix_val,band)
+
+        fore_ground = getAvgGRBG(im, qd_square, mask)
+
+        T_all.append(getOneBandT(exp_time[i],fore_ground[0],K,back_ground=mono_values[i,1]))
+
+    T_all = np.array(T_all)
+
+    T_final=[]
+
+    for i in range(T_all.shape[1]):
+        for j in range(T_all.shape[2]):
+            savPdf(mono_values[:,1],pp,T_all[:,i,j,:], list(range(390,1001)),i+j,label ='')
+            for k in range(T_all.shape[3]):
+                T_final.append(T_all[:,i,j,k])
+
+    sio.savemat(test_no+'.mat', {'T': T_final})
     plt.figure()
-    for i in range(len(allT)):
-        plt.plot(range(allT[0]),allT[i])
+    for m in range(len(T_final)):
+        plt.plot(range(390,1001), T_final[m])
+
+    plt.legend('', loc='upper right')
+    plt.title('')
     plt.show()
 
-    return allT
 
 def getFilterMask(img):
 
@@ -282,65 +302,211 @@ def getFilterMask(img):
 
     return mask_final
 
-def plotLines(img,title=''):
 
-    img=np.array(img)
+def showGRBG(imgs,area,mask):
 
-    # ploting col by col
+    bands_all=[]
+    vals_all=[]
+    for im in imgs:
+        _,bands,vals = getAvgGRBG(im, area, mask)
+        bands_all.append(np.average(bands,0))
+        vals_all.append(np.average(vals,0))
+
+
+    plotLine(list(range(390,1001,1)), bands_all, title='')
+    plotLine(list(range(390,1001,1)), vals_all, title='')
+
+    return bands_all,vals_all
+
+
+def plotLine(range,data,title=''):
+
     plt.figure()
-    txt = []
-    for i in range(np.max(img[:,1]).astype(int)):
-        plt.plot(range(len(img[img[:,1]==0][:,2])),img[img[:,1]==i][:,2])
-        txt.append('col_{}'.format(i))
-
-    plt.legend(tuple(txt),loc='upper right')
-    plt.title(title)
-    # plt.show()
-
-    # ploting row by row
-    plt.figure()
-    txt = []
-    for i in range(np.max(img[:,0]).astype(int)):
-        plt.plot(range(len(img[img[:,0]==0][:,2])),img[img[:,0]==i][:,2])
-        txt.append('row_{}'.format(i))
-
-    plt.legend(tuple(txt),loc='upper right')
+    plt.plot(range,data)
+    plt.legend('',loc='upper right')
     plt.title(title)
     plt.show()
 
+def saveMat(fnames,imgs,sensor):
+
+    sio.savemat(sensor+'.mat',{'fnames':fnames,'imgs':imgs})
+
+def getData(path,sensor):
+
+    name = sensor+'.mat'
+    if os.path.exists(name):
+
+        imgs = sio.loadmat(name)['imgs']
+        fnames = sio.loadmat(name)['fnames']
+        print(fnames)
+
+    else:
+
+        fnames, imgs = getImgsOneFolderSplit(path)
+        saveMat(fnames, imgs,sensor)
+
+    return imgs,fnames
+
+def readExcel(path):
+    data = xlrd.open_workbook(path,encoding_override='utf-8')
+    tabel = data.sheets()[0]
+
+    monos = [tabel.col_values(0), tabel.col_values(1)]
+
+    return monos
+
+
+
+def getAvgData(path,sensor):
+
+    name = sensor+'.mat'
+    if os.path.exists(name):
+
+        imgs_post = sio.loadmat(name)['imgs']
+        fnames_post = sio.loadmat(name)['fnames']
+        print(fnames_post)
+
+    else:
+
+        fnames, imgs = getImgsOneFolderSplit(path)
+
+        imgs_post = []
+        fnames_post = []
+        for i in range(0, len(imgs), 3):
+            imgs_post.append(np.average(imgs[i:i + 3], 0))
+            fnames_post.append(fnames[i])
+
+        imgs_post = np.array(imgs_post,dtype=np.uint8)
+        saveMat(fnames_post, imgs_post,sensor)
+
+    return imgs_post,fnames_post
+
+
+def savPdf(light,pp, y, x,qd_indx,label =''):
+
+    # fmt = "L1_%d_n%d_me%d_mf%d.pdf"
+    # nr = noise_ratio * 100
+    # me = measure_error * 100
+    # mf = measure_off * 100
+    # pp = PdfPages(fmt % (spec, nr, me, mf))
+    cor = ['g','r','b','y']
+    lab=['G1','R','B','G2']
+
+    for i in range(y.shape[1]):
+        plt.plot(x, y[:,i], color=cor[i],label=lab[i])
+    plt.plot(x, light/np.max(light), color='k', label='light')
+    plt.xlabel('Wavelength [nm]')
+    plt.ylabel('Transmission')
+    plt.title('QD:'+str(qd_indx))
+    plt.legend()
+        # plt.text(600, 0.9, label)
+    pp.savefig()
+    plt.clf()
+
+
+def getTimeConf(fileName):
+
+    time = np.loadtxt(fileName)
+    return time
+
+
 if __name__=='__main__':
 
-    # The 2nd data with qd
-    # path = '../data/DingBiao/data_20171205/Calibration/400nm/200ms/'
-    # avgImg = getAvgImg(path)
-    # avg_cols, avg_rows = getAreaIntensity(avgImg['avgImage'])
-    # plotLines(avg_cols)
-    # plotLine(avg_rows)
+    ####----------------------------------------------V2----------------------------------------------
 
-    # # test the image by sampling
-    # avgImg = getAvgImg(path)
-    # img = cf.img2tuple(avgImg['avgImage'][0])
-    # cf.fit_3d(img)
 
-    ## test one by one
-    # imgs = getImgList(path,3)
-    # getAreaIntensity(imgs['images'])
+    # # test1
 
-    # # The 1nd data without qd
-    # path = '../data/DingBiao/100DS_first_dingbiao/WithoutQD/390-500/'
-    # # path = '../data/DingBiao/100DS_first_dingbiao/WithoutQD/742-900/'
-    # imgs = getImgList(path,10)
-    # getAreaIntensity(imgs['images'])
+    # path = '../data/DingBiao/N.1_dingbiao/390-1000nm/'
+    # imgs =getImgsOneFolder(path)
+    # avg_img = getAvgImg(imgs)
+    # cols, rows, qd_square = getArea(path = '../data/DingBiao/data_20171205/',name='coords_calibration.mat')
+    # # showImgArea(avg_img, cols)
     #
-    # # The 1nd data with qd
-    # path = '../data/DingBiao/100DS_first_dingbiao/WithQD/390-500/'
-    # imgs = getImgList(path,10)
-    # getAreaIntensity(imgs['images'])
+    # mask = getFilterMask(avg_img)
+    # avg_cols = getAvgGRBG(avg_img, cols, mask)
+    # avg_rows = getAvgGRBG(avg_img, rows, mask)
+    #
+    # mix_val = getMixGRBG(col=avg_cols,row=avg_rows)
 
-    ####----------------------------------------------transmission matrix-----------------------------
 
-    # path = '../data/DingBiao/data_20171205/Calibration/500nm/320ms/'
-    # avgImg = getAvgImg(path)
-    # # getAvgGBRG(avgImg['avgImage'][0])
 
-    T = getALLT()
+    # # test2
+    # sensor ='N.1_DN170_20171218_CALI_DATA'
+    # path = '../data/DingBiao/'+sensor+'/DATA/'
+    # imgs,f_names = getAvgData(path,sensor)
+    #
+    # avg_img = getAvgImg(imgs)
+    # cols, rows, qd_square = getArea(path = '../data/DingBiao/data_20171205/',name='coords_calibration.mat')
+    # # showImgArea(avg_img, cols)
+    #
+    # mask = getFilterMask(avg_img)
+    # showGRBG(imgs, cols, mask)
+    #
+    # avg_cols = getAvgGRBG(avg_img, cols, mask)
+    # avg_rows = getAvgGRBG(avg_img, rows, mask)
+    #
+    # mix_val = getMixGRBG(col=avg_cols[0],row=avg_rows[0])
+
+
+#####---------------------------------------v3----------------------------------------------
+
+    # # test3
+    # test_no ='N.1_DN160_20171219_CALI_DATA'
+    # path = '../data/DingBiao/'+test_no+'/DATA/'
+    # imgs = getImgsOneFolder(path)
+    # cols, rows, qd_square = getArea(path = '../data/DingBiao/data_20171205/',name='coords_calibration.mat')
+    # mask = getFilterMask(imgs[0])
+    # exp_time_conf=getTimeConf('160_exposure_time_after_201712191333dn160.txt')
+    # #exp_times=exp_time_conf[:,2]/np.max(exp_time_conf[:,2])
+    # exp_times=exp_time_conf[:,2]
+    # fmt = test_no+'.pdf'
+    # pp = PdfPages(fmt)
+    # getT(exp_times,test_no,pp,imgs,cols, rows, qd_square,mask)
+    # pp.close()
+
+
+
+    # # # test4
+    # monos = readExcel('../data/DingBiao/N1/20171220_1.xlsx')
+    # test_no ='N.1_DN160_20171219_CALI_DATA_3times'
+    # path1 = '../data/DingBiao/N1/N.1_DN160_20171219_CALI_DATA/'
+    # path2 = '../data/DingBiao/N1/N.1_DN160_20171219_CALI_DATA_2/'
+    # path3 = '../data/DingBiao/N1/N.1_DN160_20171219_CALI_DATA_3/'
+    # imgs1 = np.array(getImgsOneFolder(path1),dtype=np.uint16)
+    # imgs2 = np.array(getImgsOneFolder(path2),dtype=np.uint16)
+    # imgs3 = np.array(getImgsOneFolder(path3),dtype=np.uint16)
+    # imgs=[]
+    # for i in range(len(imgs1)):
+    #     imgs.append((imgs1[i]+imgs2[i]+imgs3[i])/3)
+    # imgs=np.array(imgs,dtype=np.uint8)
+    # cols, rows, qd_square = getArea(path = '../data/DingBiao/data_20171205/',name='coords_calibration.mat')
+    # mask = getFilterMask(imgs[0])
+    # exp_time_conf=getTimeConf('160_exposure_time_after_201712191333dn160.txt')
+    # exp_times=exp_time_conf[:,2]/np.max(exp_time_conf[:,2])
+    # fmt = test_no+'.pdf'
+    # pp = PdfPages(fmt)
+    # getT(monos,exp_times,test_no,pp,imgs,cols, rows, qd_square,mask)
+    # pp.close()
+
+    # # test5
+    monos = readExcel('../data/DingBiao/N1/20171220_1.xlsx')
+    test_no ='N.2_DN160_20171220_CALI_DATA_3times'
+    path1 = '../data/DingBiao/N2/N.2_DN160_20171220_CALI_DATA_1/DATA/'
+    path2 = '../data/DingBiao/N2/N.2_DN160_20171220_CALI_DATA_2/DATA/'
+    path3 = '../data/DingBiao/N2/N.2_DN160_20171220_CALI_DATA_3/DATA/'
+    imgs1 = np.array(getImgsOneFolder(path1),dtype=np.uint16)
+    imgs2 = np.array(getImgsOneFolder(path2),dtype=np.uint16)
+    imgs3 = np.array(getImgsOneFolder(path3),dtype=np.uint16)
+    imgs=[]
+    for i in range(len(imgs1)):
+        imgs.append((imgs1[i]+imgs2[i]+imgs3[i])/3)
+    imgs=np.array(imgs,dtype=np.uint8)
+    cols, rows, qd_square = getArea(path = '../data/DingBiao/data_20171205/',name='coords_calibration.mat')
+    mask = getFilterMask(imgs[0])
+    exp_time_conf=getTimeConf('160_exposure_time_after_201712191333dn160.txt')
+    exp_times=exp_time_conf[:,2]/np.max(exp_time_conf[:,2])
+    fmt = test_no+'.pdf'
+    pp = PdfPages(fmt)
+    getT(monos,exp_times,test_no,pp,imgs,cols, rows, qd_square,mask)
+    pp.close()

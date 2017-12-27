@@ -6,6 +6,22 @@ from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
 
 
+def leastsq(x,y):
+
+    x=np.array(x)
+    y=np.array(y)
+    A=np.vstack([x,np.ones(len(x))]).T
+    m,c = np.linalg.lstsq(A,y)[0]
+
+    plt.plot(x,y,'o',label='Original data',markersize=10)
+    plt.plot(x,m*x+c,'r',label='Fitted line')
+    plt.legend()
+    plt.show()
+
+    # cal error
+
+
+# # test the image by sampling
 def img2Tuple(img):
 
     img=np.array(img)
@@ -36,11 +52,11 @@ def fit_3d(data,title=''):
     y_max=np.max(data[:,1])
 
     # regular grid covering the domain of the data
-    X, Y = np.meshgrid(np.arange(x_min, x_max, 0.5), np.arange(y_min, y_max, 0.5))
+    X, Y = np.meshgrid(np.arange(x_min, x_max+1, 1), np.arange(y_min, y_max+1, 1))
     XX = X.flatten()
     YY = Y.flatten()
 
-    order = 1  # 1: linear, 2: quadratic
+    order = 2  # 1: linear, 2: quadratic
     if order == 1:
         # best-fit linear plane
         A = np.c_[data[:, 0], data[:, 1], np.ones(data.shape[0])]
@@ -61,9 +77,9 @@ def fit_3d(data,title=''):
         Z = np.dot(np.c_[np.ones(XX.shape), XX, YY, XX * YY, XX ** 2, YY ** 2], C).reshape(X.shape)
 
     # # plot points and fitted surface #
-    show_surf(data,X, Y, Z, title)
+    # show_surf(data,X, Y, Z, title)
 
-    return C
+    return Z
 
 def show_surf(data,X,Y,Z,title):
 
@@ -81,9 +97,16 @@ def show_surf(data,X,Y,Z,title):
 
 
 if __name__=='__main__':
-    # some 3-dim points
-    mean = np.array([0.0, 0.0, 0.0])
-    cov = np.array([[1.0, -0.5, 0.8], [-0.5, 1.1, 0.0], [0.8, 0.0, 1.0]])
-    data = np.random.multivariate_normal(mean, cov, 50)
 
-    fit_3d(data)
+    # # some 3-dim points
+    # mean = np.array([0.0, 0.0, 0.0])
+    # cov = np.array([[1.0, -0.5, 0.8], [-0.5, 1.1, 0.0], [0.8, 0.0, 1.0]])
+    # data = np.random.multivariate_normal(mean, cov, 50)
+    #
+    # fit_3d(data)
+
+
+    # # test2
+    x=[0,1,2,3]
+    y=[-1,0.2,0.9,2.1]
+    leastsq(x,y)
