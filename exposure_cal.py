@@ -10,8 +10,10 @@ import curve_fitting as cf
 import copy
 import light_distribution as ld
 
+
 #
 # def makeConf():
+
 
 def plotLines(start,end,data,title=''):
 
@@ -55,7 +57,8 @@ def getExposureTime(start,end,time,intensities,expect=None):
     # plotLines(start, end, time,title='The last exposure time')
     # plotLines(start,end,a,title='The new exposure time')
 
-    return a
+    return np.array(time_exposure).astype(int)
+
 
 def testExpTime(start,end,a,expect,intensities,time):
 
@@ -99,6 +102,7 @@ def getAvgIntensities(start,end,zero,path=None,b=-4):
     plotLines(start, end, band,'The band of different lambda')
 
     return Intensity
+
 
 def getAvgIntensities_area(start,end,zero,a1,a2,b1,b2,path=None):
 
@@ -167,6 +171,7 @@ def saveExcel(exp_time,name='exposure_time.xls'):
     book.save(name)
     book.save(TemporaryFile())
 
+
 def testDif():
     start = 390
     end = 1000
@@ -212,7 +217,7 @@ def cal_expTime(path1,path2,name1,name2,expect):
     intensities = getAvgIntensities(start,end,start,path1)
     times = getTimeConf(path2+name1)
     et = getExposureTime(start,end,times[:,2],intensities,expect)
-    name = path2+str(expect)+'_exposure_time_after_'+name2
+    name = path2+str(expect)+'_origin_exposure_time_after_'+name2
     saveTxt(start, end, et, name)
 
 
@@ -220,21 +225,19 @@ if __name__=='__main__':
 
 
 
-
-
-    # # test light distribution of DN_100
-    path1 = '../data/test/20171212withoutqd/20171212/'
-    testImgWithoutQD(path1,b=-4)
-
-
-    # # test light distribution of DN_170
-    # path1 = '../data/DingBiao/N.0_201712191159dn170/'
+    # # # test light distribution of DN_100
+    # path1 = '../data/test/20171212withoutqd/20171212/'
     # testImgWithoutQD(path1,b=-4)
-
-
-    #### test light distribution of DN_170
-    path1 = '../data/DingBiao/N.0_201712191333dn160/'
-    testImgWithoutQD(path1,b=-4)
+    #
+    #
+    # # # test light distribution of DN_170
+    # # path1 = '../data/DingBiao/N.0_201712191159dn170/'
+    # # testImgWithoutQD(path1,b=-4)
+    #
+    #
+    # #### test light distribution of DN_170
+    # path1 = '../data/DingBiao/N.0_201712191333dn160/'
+    # testImgWithoutQD(path1,b=-4)
 
     # # test light distribution of DN_170
     # path1 = '../data/DingBiao/N.0_201712191605dn160/'
@@ -257,13 +260,13 @@ if __name__=='__main__':
     # cal_expTime(path1,path2,name1,name2,expect)
 
     #
-    # # # cal exposure time config
-    # path1 = '../data/DingBiao/N.0_201712191333dn160/'
-    # path2 = '../data/DingBiao/'
-    # expect = 160
-    # name1= '160_exposure_time_after_201712191159.txt'
-    # name2 = '201712191333dn160'
-    # cal_expTime(path1,path2,name1,name2,expect)
+    # # cal exposure time config
+    path1 = '../data/DingBiao/N.0_201712191333dn160/'
+    path2 = '../data/DingBiao/'
+    expect = 160
+    name1= '160_exposure_time_after_201712191159.txt'
+    name2 = '201712191333dn160'
+    cal_expTime(path1,path2,name1,name2,expect)
 
 
 

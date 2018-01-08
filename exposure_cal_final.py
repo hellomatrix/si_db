@@ -142,26 +142,25 @@ def testExpTime(start,end,zero,a,b,expect,intensities,time1):
     time = time1[start-zero:end+1-zero]
 
     plotLines(start, end, intensities,title='The intensity of last imaging')
-    plotLines(start,end,intensities*b/time,'The expecting intensity ')
-    plotLines(start,end,intensities*a/time,'The expecting intensity after ceiling')
+    plotLines(start, end, intensities*b//time,'The expecting intensity ')
+    plotLines(start, end, intensities*a//time,'The expecting intensity after ceiling')
 
-    plotLines(start, end, time,title='The last exposure time')
-    plotLines(start,end,a,title='The new exposure time ')
-    plotLines(start,end,b,title='The new exposure time after ceiling')
+    plotLines(start, end, time, title='The last exposure time')
+    plotLines(start, end, a, title='The new exposure time ')
+    plotLines(start, end, b, title='The new exposure time after ceiling')
 
 def getExposureTime(start,end,zero,time,intensities,expect=None):
 
     time_exposure=[]
     for i in range(start-zero,end+1-zero):
-
         time_exposure.append(expect*time[i]/intensities[i])
 
     a=np.array(time_exposure.copy())
     b=a.copy()
     # testExpTime(start, end,zero, a, expect, intensities, time)
 
+    a = (a+1).astype(int)
     a[a>500000] = 500000
-    a = a.astype(int)
 
     testExpTime(start,end,zero,a,b,expect,intensities,time)
 
@@ -230,16 +229,57 @@ if __name__=='__main__':
     # cal_expTime_area(cols,start_band,end_band,start_band,imgs_path,expo_path,old_expo_name,new_expo_name,expect)
 
 
+    # # # cal exposure time config 201712171023
+    # imgs_path = '../data/DingBiao/N.1_390-500_0/' # The folder of last imaging
+    # expo_path = '../data/DingBiao/'                # The folder of last exposure time
+    # expect = 80                          # The expecting DN value
+    # old_expo_name= 'test_final_390_500.txt'  # The last exposure time config file
+    # new_expo_name = 'test_final_390_500_201712171023' # The name of new exposure time config file
+    # start_band = 390 # start band
+    # end_band = 500 # end band
+    # cols, rows, qd_square = getArea(path='../data/DingBiao/data_20171205/', name='coords_calibration.mat')
+    # cal_expTime_area(cols,start_band,end_band,start_band,imgs_path,
+    #                  expo_path,old_expo_name,new_expo_name,expect,b=-6)
+
+
+    # # # cal exposure time config 201712171023
+    # imgs_path = '../data/DingBiao/N1_EXP390_500/' # The folder of last imaging
+    # expo_path = '../data/DingBiao/'                # The folder of last exposure time
+    # expect = 40                          # The expecting DN value
+    # old_expo_name= 'test_final_390_500_201712171023.txt'  # The last exposure time config file
+    # new_expo_name = 'test_final_390_500_201712171104' # The name of new exposure time config file
+    # start_band = 390 # start band
+    # end_band = 500 # end band
+    # cols, rows, qd_square = getArea(path='../data/DingBiao/data_20171205/', name='coords_calibration.mat')
+    # cal_expTime_area(cols,start_band,end_band,start_band,imgs_path,
+    #                  expo_path,old_expo_name,new_expo_name,expect,b=-6)
+
+
+
+    # # # cal exposure time config 201712171023
+    # imgs_path = '../data/DingBiao/N2_EXP390_500/' # The folder of last imaging
+    # expo_path = '../data/DingBiao/'                # The folder of last exposure time
+    # expect = 160                          # The expecting DN value
+    # old_expo_name= 'test_final_390_500_201712171104.txt'  # The last exposure time config file
+    # new_expo_name = 'test_final_390_500_201712171142' # The name of new exposure time config file
+    # start_band = 390 # start band
+    # end_band = 500 # end band
+    # cols, rows, qd_square = getArea(path='../data/DingBiao/data_20171205/', name='coords_calibration.mat')
+    # cal_expTime_area(cols,start_band,end_band,start_band,imgs_path,
+    #                  expo_path,old_expo_name,new_expo_name,expect,b=-6)
+
+
     # # cal exposure time config 201712171023
-    imgs_path = '../data/DingBiao/N.1_390-500_0/' # The folder of last imaging
+    imgs_path = '../data/DingBiao/N1_EXP390_500_3/' # The folder of last imaging
     expo_path = '../data/DingBiao/'                # The folder of last exposure time
-    expect = 80                          # The expecting DN value
-    old_expo_name= 'test_final_390_500.txt'  # The last exposure time config file
-    new_expo_name = 'test_final_390_500_201712171023' # The name of new exposure time config file
+    expect = 160                          # The expecting DN value
+    old_expo_name= 'test_final_390_500_201712171142.txt'  # The last exposure time config file
+    new_expo_name = 'test_final_390_500_201712171215' # The name of new exposure time config file
     start_band = 390 # start band
     end_band = 500 # end band
     cols, rows, qd_square = getArea(path='../data/DingBiao/data_20171205/', name='coords_calibration.mat')
     cal_expTime_area(cols,start_band,end_band,start_band,imgs_path,
                      expo_path,old_expo_name,new_expo_name,expect,b=-6)
+
 
     print('ok!')
