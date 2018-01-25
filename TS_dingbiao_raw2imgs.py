@@ -2,31 +2,43 @@ import numpy as np
 import os
 import cv2
 import time
+import matplotlib.pyplot as plt
+import scipy.io as sio
+
+
+def showImg(img):
+
+    print(img.max())
+    plt.figure()
+    plt.imshow(img,cmap=plt.cm.get_cmap('gray'))
+    plt.title('')
+    plt.show()
 
 
 def raw2Img(file,h,w):
 
     print(file)
-
     f = open(file, 'rb')
     hf = np.fromfile(f, dtype=np.uint16)
-
     t = 0
-    img_ori = np.zeros((h+2, w), dtype=np.uint16)
-    for i in range(h):
+
+    h1 = h+2
+    img_ori = np.zeros((h1, w), dtype=np.uint16)
+    for i in range(h1):
         for j in range(w):
             img_ori[i,j] = hf[t]
             t = t + 1
 
-    img_uin8 = np.array(img_ori[1:-1,:].copy()/2047 * 255,dtype=np.uint8)
+    print('maxmum value:', (img_ori[1:-1, :].max()))
+    img_uin8 = np.array(img_ori[1:-1,:].copy()/2047 * 255, dtype=np.uint8)
     print('maxmum value:', (img_ori[1:-1,:].max(),img_uin8.max()))
     # showImg(img)
 
     return img_ori[1:-1],img_uin8
 
 
-
 if __name__=='__main__':
+
 
     fpath = '../data/TS_dingbiao/J_dingbiao/'
     band_name = '622-730nm'
@@ -72,4 +84,4 @@ if __name__=='__main__':
 
         end=time.process_time()
 
-        print('Time comsuming: ',end-start)
+        print('Time consuming: ',end-start)

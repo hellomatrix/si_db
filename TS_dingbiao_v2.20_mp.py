@@ -17,6 +17,7 @@ COLOR_1 = (0,255, 0)
 # path_ori = None
 # list_ori = None
 
+
 def showImg(img):
 
     # img = img/65535 * 255
@@ -173,8 +174,8 @@ def worker(j,band):
 
     im = np.array(f_img / devide_mask, dtype=np.uint16)
 
-    # showImg(np.array(im/2047*255,dtype=np.uint8))
-    # showImg(devide_mask)
+    showImg(np.array(im/2047*255,dtype=np.uint8))
+    showImg(devide_mask)
     #
     # plt.figure()
     # plt.plot(range(len(rs)),rs)
@@ -187,7 +188,7 @@ def worker(j,band):
 if __name__=='__main__':
 
     fpath = '../data/TS_dingbiao/J_dingbiao/'
-    band_name = '622-730nm'
+    band_name = '400-439nm'
     path_ori = fpath+band_name+'_ori_imgs/'
     path_u8 = fpath+band_name+'_u8_imgs/'
 
@@ -199,7 +200,7 @@ if __name__=='__main__':
 
     start = time.time()
 
-    for j in range(24,25):
+    for j in range(0,4):
         pool.apply_async(worker,args=(j,band_name))
 
     pool.close()

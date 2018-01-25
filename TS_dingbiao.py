@@ -250,8 +250,6 @@ if __name__=='__main__':
          thresh1 = cv2.medianBlur(thresh1, 7)
          ret, thresh1 = cv2.threshold(thresh1, 250, 255, cv2.THRESH_BINARY)
 
-
-
          # showImg(thresh1)
 
          # # # opt
@@ -284,7 +282,7 @@ if __name__=='__main__':
 
     dif(roi)
 
-    sio.savemat('roi.mat',{'rois':roi})
+    # sio.savemat('roi.mat',{'rois':roi})
 
     #find difference between sets
 

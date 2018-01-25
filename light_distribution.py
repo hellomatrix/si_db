@@ -429,8 +429,6 @@ if __name__=='__main__':
     #
     # mix_val = getMixGRBG(col=avg_cols,row=avg_rows)
 
-
-
     # # test2
     # sensor ='N.1_DN170_20171218_CALI_DATA'
     # path = '../data/DingBiao/'+sensor+'/DATA/'
@@ -464,8 +462,6 @@ if __name__=='__main__':
     # pp = PdfPages(fmt)
     # getT(exp_times,test_no,pp,imgs,cols, rows, qd_square,mask)
     # pp.close()
-
-
 
     # # # test4
     # monos = readExcel('../data/DingBiao/N1/20171220_1.xlsx')

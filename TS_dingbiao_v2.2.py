@@ -189,7 +189,7 @@ if __name__=='__main__':
 
         im = np.array(f_img/devide_mask,dtype=np.uint16)
 
-        # showImg(np.array(im/2047*255,dtype=np.uint8))
+        showImg(np.array(im/2047*255,dtype=np.uint8))
         # showImg(devide_mask)
         #
         # plt.figure()
@@ -198,8 +198,8 @@ if __name__=='__main__':
 
         end=time.process_time()
         print(end-start)
-
-        cv2.imwrite(path_ori + list_ori[j] + '.png', im)
-        cv2.imwrite(path_u8 + list_u8[j] + '_u8.png', np.array(im/2047*255,dtype=np.uint8))
+        #
+        # cv2.imwrite(path_ori + list_ori[j] + '.png', im)
+        # cv2.imwrite(path_u8 + list_u8[j] + '_u8.png', np.array(im/2047*255,dtype=np.uint8))
 
         print(band_name+' is ok!')
